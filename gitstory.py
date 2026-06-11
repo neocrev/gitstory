@@ -332,9 +332,14 @@ def main():
     file_changes = Counter()
     weekly = Counter()
 
+    total = len(commits)
     for i, c in enumerate(commits):
-        if i % 500 == 0 and i > 0:
-            print(f"  Processing commit {i}/{len(commits)}...")
+        if i % 250 == 0 and i > 0:
+            pct = i * 100 // total
+            bar_len = 20
+            filled = pct * bar_len // 100
+            bar = '█' * filled + '░' * (bar_len - filled)
+            print(f"\r  Processing commits: |{bar}| {i}/{total} ({pct}%)", end='', flush=True)
         added, deleted, files = get_file_changes(repo_path, c["commit"])
         total_added += added
         total_deleted += deleted
@@ -347,6 +352,10 @@ def main():
             weekly[week_key] += 1
         except:
             pass
+
+    if total > 250:
+        print(f"\r  Processing commits: |{'█' * 20}| {total}/{total} (100%)", flush=True)
+        print()
 
     weekly_sorted = sorted(weekly.items())
     weekly_data = [{"date": w, "count": c} for w, c in weekly_sorted]
