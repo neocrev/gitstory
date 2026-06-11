@@ -130,6 +130,14 @@ def build_html(commits, contributors, branches, tags, first_date, languages, fil
         f"<tr><td>{f[0]}</td><td>{f[1]} changes</td></tr>" for f in top_files
     )
 
+    # Chart data
+    week_dates = json.dumps([w["date"] for w in weekly_data])
+    week_counts = json.dumps([w["count"] for w in weekly_data])
+    contrib_names = json.dumps([c["name"] for c in contributors[:8]])
+    contrib_counts = json.dumps([c["commits"] for c in contributors[:8]])
+    lang_labels = json.dumps([l["ext"] for l in languages])
+    lang_pcts = json.dumps([l["pct"] for l in languages])
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -149,8 +157,9 @@ def build_html(commits, contributors, branches, tags, first_date, languages, fil
   .stat-card{{background:#1a1b2e;border-radius:10px;padding:16px;text-align:center;border:1px solid #24253a}}
   .stat-card .val{{font-size:28px;font-weight:700;color:#7dcfff;display:block}}
   .stat-card .label{{font-size:12px;color:#565f89;margin-top:4px;text-transform:uppercase;letter-spacing:.5px}}
-  .chart-wrap{{background:#1a1b2e;border-radius:10px;padding:16px;margin-bottom:20px;border:1px solid #24253a}}
-  .chart-wrap canvas{{max-height:300px}}
+  .chart-wrap{{background:#1a1b2e;border-radius:10px;padding:16px;margin-bottom:20px;border:1px solid #24253a;flex:1;min-width:280px}}
+  .chart-wrap canvas{{max-height:250px}}
+  .chart-row{{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px}}
   table{{width:100%;border-collapse:collapse;margin-bottom:20px;font-size:14px}}
   th,td{{padding:8px 12px;text-align:left;border-bottom:1px solid #1a1b2e}}
   th{{color:#565f89;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}}
@@ -181,11 +190,6 @@ def build_html(commits, contributors, branches, tags, first_date, languages, fil
   <div class="stat-card"><span class="val">{first} &rarr; {last}</span><span class="label">Period</span></div>
 </div>
 
-<h2>Weekly Commits</h2>
-<div class="chart-wrap">
-  <canvas id="weeklyChart"></canvas>
-</div>
-
 <h2>Top Contributors</h2>
 <table>
   <tr><th>#</th><th>Name</th><th>Commits</th><th></th></tr>
@@ -197,6 +201,21 @@ def build_html(commits, contributors, branches, tags, first_date, languages, fil
   <tr><th>Extension</th><th>Files</th><th></th><th>%</th></tr>
   {lang_rows}
 </table>
+
+<div class="chart-row">
+  <div class="chart-wrap">
+    <h3 style="font-size:14px;font-weight:600;color:#bb9af7;margin-bottom:10px">Weekly Commits</h3>
+    <canvas id="weeklyChart"></canvas>
+  </div>
+  <div class="chart-wrap">
+    <h3 style="font-size:14px;font-weight:600;color:#bb9af7;margin-bottom:10px">Contributors</h3>
+    <canvas id="contribChart"></canvas>
+  </div>
+  <div class="chart-wrap">
+    <h3 style="font-size:14px;font-weight:600;color:#bb9af7;margin-bottom:10px">Languages</h3>
+    <canvas id="langChart"></canvas>
+  </div>
+</div>
 
 <h2>Most Changed Files</h2>
 <table>
@@ -240,9 +259,41 @@ new Chart(document.getElementById('weeklyChart'), {{
     maintainAspectRatio: false,
     plugins: {{ legend: {{ display: false }} }},
     scales: {{
-      x: {{ ticks: {{ color: '#565f89', maxTicksLimit: 20 }}, grid: {{ color: '#1a1b2e' }} }},
+      x: {{ ticks: {{ color: '#565f89', maxTicksLimit: 15, font: {{size:9}} }}, grid: {{ color: '#1a1b2e' }} }},
       y: {{ beginAtZero: true, ticks: {{ color: '#565f89', stepSize: 1 }}, grid: {{ color: '#1a1b2e' }} }}
     }}
+  }}
+}});
+new Chart(document.getElementById('contribChart'), {{
+  type: 'doughnut',
+  data: {{
+    labels: {contrib_names},
+    datasets: [{{
+      data: {contrib_counts},
+      backgroundColor: ['#7aa2f7','#bb9af7','#7ecb8b','#e0af68','#f7768e','#b4f9f8','#ff9e64','#89a0c2'],
+      borderWidth: 0,
+    }}]
+  }},
+  options: {{
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {{ legend: {{ position: 'right', labels: {{ color: '#c0caf5', font: {{size:10}}, boxWidth: 10, padding: 8 }} }} }}
+  }}
+}});
+new Chart(document.getElementById('langChart'), {{
+  type: 'pie',
+  data: {{
+    labels: {lang_labels},
+    datasets: [{{
+      data: {lang_pcts},
+      backgroundColor: ['#3572a5','#f1e05a','#3178c6','#dea584','#00add8','#b07219','#555','#f34b7d','#701516','#4f5d95','#563d7c','#e34c26','#89e051','#f05138','#a97bff'],
+      borderWidth: 0,
+    }}]
+  }},
+  options: {{
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {{ legend: {{ position: 'right', labels: {{ color: '#c0caf5', font: {{size:10}}, boxWidth: 10, padding: 8 }} }} }}
   }}
 }});
 </script>
