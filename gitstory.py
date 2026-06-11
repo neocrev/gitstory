@@ -313,7 +313,7 @@ def main():
     parser.add_argument("--max-commits", type=int, default=5000, help="Maximum commits to analyze (default: 5000)")
     parser.add_argument("--since", help="Only commits after this date (e.g. '2024-01-01')")
     parser.add_argument("--until", help="Only commits before this date (e.g. '2025-01-01')")
-    parser.add_argument("--author", help="Only commits by this author (pattern match)")
+    parser.add_argument("--author", help="Only commits by this author (substring match, case-sensitive)")
     args = parser.parse_args()
 
     repo_path = os.path.abspath(args.repo)
