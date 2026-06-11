@@ -13,9 +13,15 @@ def run_git(repo_path, args):
         sys.exit(1)
     return result.stdout
 
-def get_commits(repo_path, max_count=5000):
+def get_commits(repo_path, max_count=5000, since=None, until=None, author=None):
     fmt = "--format=%H%x00%an%x00%ae%x00%aI%x00%s"
-    raw = run_git(repo_path, ["log", f"--max-count={max_count}", "--all", fmt])
+    cmd = ["log", f"--max-count={max_count}"]
+    if since: cmd.append(f"--since={since}")
+    if until: cmd.append(f"--until={until}")
+    if author: cmd.extend(["--author", author])
+    cmd.append("--all")
+    cmd.append(fmt)
+    raw = run_git(repo_path, cmd)
     commits = []
     for line in raw.strip().split("\n"):
         if not line:
@@ -305,6 +311,9 @@ def main():
     parser.add_argument("repo", nargs="?", default=".", help="Path to git repository (default: current dir)")
     parser.add_argument("-o", "--output", default=None, help="Output HTML file path (default: gitstory_<repo>.html)")
     parser.add_argument("--max-commits", type=int, default=5000, help="Maximum commits to analyze (default: 5000)")
+    parser.add_argument("--since", help="Only commits after this date (e.g. '2024-01-01')")
+    parser.add_argument("--until", help="Only commits before this date (e.g. '2025-01-01')")
+    parser.add_argument("--author", help="Only commits by this author (pattern match)")
     args = parser.parse_args()
 
     repo_path = os.path.abspath(args.repo)
@@ -315,7 +324,7 @@ def main():
     repo_name = os.path.basename(os.path.abspath(repo_path))
     print(f"Analyzing {repo_name}...")
 
-    commits = get_commits(repo_path, args.max_commits)
+    commits = get_commits(repo_path, args.max_commits, args.since, args.until, args.author)
     print(f"  Commits loaded: {len(commits)}")
 
     total_added, total_deleted = 0, 0
