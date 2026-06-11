@@ -16,7 +16,7 @@ def test_requires_git_repo():
     with tempfile.TemporaryDirectory() as tmp:
         result = run([PYTHON, SCRIPT, tmp])
         assert result.returncode != 0
-        assert "not a git repository" in result.stderr
+        assert "not a git repository" in result.stderr or "is not a git repository" in result.stderr
 
 def test_generates_html():
     result = run([PYTHON, SCRIPT, TEST_REPO, "-o", "/tmp/gitstory_test_output.html"])

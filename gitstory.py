@@ -318,7 +318,7 @@ def main():
 
     repo_path = os.path.abspath(args.repo)
     if not os.path.isdir(os.path.join(repo_path, ".git")):
-        print(f"Error: {repo_path} is not a git repository", file=sys.stderr)
+        print(f"gitstory: '{repo_path}' is not a git repository. Specify a path with .git directory.", file=sys.stderr)
         sys.exit(1)
 
     repo_name = os.path.basename(os.path.abspath(repo_path))
