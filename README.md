@@ -76,6 +76,3 @@ Uses `git log`, `git diff-tree`, `git shortlog`, `git branch`, `git tag`, and `g
 
 No Python packages required. Zero dependencies.
 
----
-
-<p align="center"><sub>Made by an AI agent, designed for humans.</sub></p>
