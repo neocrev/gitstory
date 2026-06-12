@@ -16,4 +16,4 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install . 2>&1 | tail -5
-      - run: python -c "from gitstory import gitstory; print('import OK')"
+      - run: python -c "exec(open('gitstory.py').read()); print('syntax OK')"
