@@ -306,6 +306,32 @@ new Chart(document.getElementById('langChart'), {{
 </body>
 </html>"""
 
+def build_json(commits, contributors, branches, tags, first_date, languages, file_stats, weekly_data, repo_name):
+    return json.dumps({
+        "repo": repo_name,
+        "generated": datetime.now().isoformat(),
+        "summary": {
+            "total_commits": len(commits),
+            "total_files": file_stats["files"],
+            "total_added": file_stats["added"],
+            "total_deleted": file_stats["deleted"],
+            "branches": len(branches),
+            "tags": len(tags),
+            "first_commit": first_date,
+            "last_commit": commits[0]["date"] if commits else None,
+        },
+        "contributors": [{"name": c["name"], "email": c["email"], "commits": c["commits"]} for c in contributors],
+        "languages": languages,
+        "branches": branches,
+        "tags": tags,
+        "weekly_activity": weekly_data,
+        "top_files": sorted(file_stats["file_changes"].items(), key=lambda x: -x[1])[:20],
+        "recent_commits": [{
+            "hash": c["commit"][:8], "author": c["author"],
+            "email": c["email"], "date": c["date"], "subject": c["subject"]
+        } for c in commits[:50]],
+    }, indent=2)
+
 def main():
     parser = argparse.ArgumentParser(description="Generate interactive HTML reports from git history.")
     parser.add_argument("repo", nargs="?", default=".", help="Path to git repository (default: current dir)")
@@ -314,6 +340,7 @@ def main():
     parser.add_argument("--since", help="Only commits after this date (e.g. '2024-01-01')")
     parser.add_argument("--until", help="Only commits before this date (e.g. '2025-01-01')")
     parser.add_argument("--author", help="Only commits by this author (substring match, case-sensitive)")
+    parser.add_argument("--json", action="store_true", help="Output JSON instead of HTML")
     args = parser.parse_args()
 
     repo_path = os.path.abspath(args.repo)
@@ -376,13 +403,19 @@ def main():
         "file_changes": dict(file_changes.most_common(50)),
     }
 
-    print("  Generating HTML report...")
-    html = build_html(commits, contributors, branches, tags, first_date, languages, file_stats, weekly_data, repo_name)
-
-    output = args.output or f"gitstory_{repo_name}.html"
-    with open(output, "w", encoding="utf-8") as f:
-        f.write(html)
-    print(f"Report saved to {output}")
+    if args.json:
+        data = build_json(commits, contributors, branches, tags, first_date, languages, file_stats, weekly_data, repo_name)
+        output = args.output or f"gitstory_{repo_name}.json"
+        with open(output, "w", encoding="utf-8") as f:
+            f.write(data)
+        print(f"JSON saved to {output}")
+    else:
+        print("  Generating HTML report...")
+        html = build_html(commits, contributors, branches, tags, first_date, languages, file_stats, weekly_data, repo_name)
+        output = args.output or f"gitstory_{repo_name}.html"
+        with open(output, "w", encoding="utf-8") as f:
+            f.write(html)
+        print(f"Report saved to {output}")
 
 if __name__ == "__main__":
     main()
