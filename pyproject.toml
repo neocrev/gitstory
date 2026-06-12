@@ -1,0 +1,9 @@
+[project]
+name = "gitstory"
+version = "0.2.0"
+description = "Generate interactive HTML reports from git history — charts, stats, contributors"
+requires-python = ">=3.8"
+authors = [{ name = "neocrev" }]
+
+[project.scripts]
+gitstory = "gitstory:main"
